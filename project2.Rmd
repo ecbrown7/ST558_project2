@@ -15,7 +15,6 @@ knitr::opts_chunk$set(fig.path = "README_files/figure-gfm")
 # **Introduction**
 
 
-## **Required Functions**
 
 These R packages are required.
 

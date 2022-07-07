@@ -4,12 +4,9 @@ Evan Brown & Daniel Craig
 7/7/2022
 
 -   [**Introduction**](#introduction)
-    -   [**Required Functions**](#required-functions)
 -   [**Data**](#data)
 
 # **Introduction**
-
-## **Required Functions**
 
 These R packages are required.
 
