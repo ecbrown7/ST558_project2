@@ -11,7 +11,7 @@ Evan Brown & Daniel Craig
 
 ## **Required Functions**
 
-These R packages are required in order to work with the Polygon API:
+These R packages are required.
 
 -   [tidyverse](https://www.tidyverse.org/packages/)
 
