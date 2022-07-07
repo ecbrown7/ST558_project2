@@ -1,7 +1,7 @@
 ---
 title: 'ST558 Project 2: News Popularity'
-author: "Evan Brown & Daniel Craig"
-date: "7/7/2022"
+author: 'Evan Brown & Daniel Craig'
+date: '7/7/2022'
 output: 
   github_document:
     toc: true
@@ -19,10 +19,14 @@ knitr::opts_chunk$set(fig.path = "README_files/figure-gfm")
 These R packages are required.
 
 - [tidyverse](https://www.tidyverse.org/packages/)  
+- [randomForest](https://www.tutorialspoint.com/r/r_random_forest.htm)  
+- [gbm](https://www.rdocumentation.org/packages/gbm/versions/2.1.8)
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, message=FALSE}
-#Reading in packages
+```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
+#Reading in required packages
 library(tidyverse)
+library(randomForest)
+library(gbm)
 ```
 
 # **Data**

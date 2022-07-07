@@ -10,7 +10,16 @@ Evan Brown & Daniel Craig
 
 These R packages are required.
 
--   [tidyverse](https://www.tidyverse.org/packages/)
+-   [tidyverse](https://www.tidyverse.org/packages/)  
+-   [randomForest](https://www.tutorialspoint.com/r/r_random_forest.htm)  
+-   [gbm](https://www.rdocumentation.org/packages/gbm/versions/2.1.8)
+
+``` r
+#Reading in required packages
+library(tidyverse)
+library(randomForest)
+library(gbm)
+```
 
 # **Data**
 
