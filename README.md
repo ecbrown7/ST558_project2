@@ -3,6 +3,20 @@ ST558 Project 2: News Popularity
 Evan Brown & Daniel Craig
 7/7/2022
 
+
+``` 
+channel <- c("lifestyle", "entertainment", "bus", "socmed", "tech", "world")
+
+output_file = paste0(channel, ".md")
+
+params <-lapply(channel, FUN = function(x){list(channel=x)})
+
+reports <- tibble(output_file, params)
+
+apply (reports, margin =1, FUN=function(x) {rmarkdown::render("files/project2.Rmd", output_file = x[[1]], output_format="github_document", params = list[[2]])}
+```
+
+
 -   [**Introduction**](#introduction)
 -   [**Data**](#data)
 

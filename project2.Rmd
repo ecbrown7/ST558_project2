@@ -6,11 +6,39 @@ output:
   github_document:
     toc: true
     html_preview: false
+params:
+    Channel: ""
 ---
 
 ```{r global options, include=FALSE}
 knitr::opts_chunk$set(fig.path = "README_files/figure-gfm")
 ```
+
+# Automation for Later, to be deleted. It is in the ReadME
+```{r}
+
+
+#"data_channel_is_lifestyle"     "data_channel_is_entertainment"
+# "data_channel_is_bus"           "data_channel_is_socmed"        "data_channel_is_tech"         
+# "data_channel_is_world"
+
+
+
+channel <- c("lifestyle", "entertainment", "bus", "socmed", "tech", "world")
+
+output_file = paste0(channel, ".md")
+
+params <-lapply(channel, FUN = function(x){list(channel=x)})
+
+reports <- tibble(output_file, params)
+
+apply (reports, margin =1, FUN= function(x) {
+  rmarkdown::render("files/project2.Rmd", output_file = x[[1]], output_format="github_document", params = list[[2]])
+  })
+
+```
+
+
 
 # **Introduction**
 
@@ -22,6 +50,7 @@ These R packages are required.
 - [randomForest](https://www.tutorialspoint.com/r/r_random_forest.htm)  
 - [gbm](https://www.rdocumentation.org/packages/gbm/versions/2.1.8)  
 - [ggsci](https://cran.r-project.org/web/packages/ggsci/vignettes/ggsci.html)
+- [corrplot](https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html)
 
 ```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
 #Reading in required packages
@@ -29,6 +58,7 @@ library(tidyverse)
 library(randomForest)
 library(gbm)
 library(ggsci)
+library(corrplot)
 ```
 
 # **Data**
@@ -143,5 +173,30 @@ Idea: Print some general grouped summary statistics (mean, max, min, std dev, et
 
 
 
+```{r echo = TRUE, eval = TRUE, message = FALSE< warning = FALSE}
+
+OrigNames <- colnames(busData) 
+
+colnames(busData) <- 1:length(busData)
+
+
+
+colnames(busData) <- OrigNames 
+
+Correlation <- busData %>% select(-starts_with("data_channel"), -"url", -"ShareStatus")
+Correlation <- cor(Correlation)
+
+corOrigNames <- dimnames(Correlation)[[2]]
+
+
+dimnames(Correlation)[[2]] <- 1:ncol(Correlation)
+dimnames(Correlation)[[1]] <- 1:ncol(Correlation)
+corrplot(Correlation, type = "upper", tl.pos = "lt", cl.cex = .8, tl.cex = .5, number.font = .7)
+corrplot(Correlation, type = "lower", method = "number", diag = FALSE, tl.pos="n", add = TRUE)
+
+
+
+
+```
 
 
