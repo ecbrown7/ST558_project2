@@ -50,6 +50,8 @@ These R packages are required.
 [ggsci](https://cran.r-project.org/web/packages/ggsci/vignettes/ggsci.html)  
 [corrplot](https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html)  
 [caret](https://cran.r-project.org/web/packages/caret/vignettes/caret.html)
+[knitr](https://rmarkdown.rstudio.com/lesson-7.html)
+[reshape2](https://cran.r-project.org/web/packages/reshape2/index.html)
 
 ```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
 #Reading in required packages
@@ -59,11 +61,13 @@ library(gbm)
 library(ggsci)
 library(corrplot)
 library(caret)
+library(knitr)
+library(reshape2)
 ```
 
 # **Data**
 
-Here, we'll get started by reading in Online News Popularity data and subsetting by news category (news channel). Additionally, URL and timedelta  (columns 1 and 2) are non-predictive variables. As such, we'll remove them from the main data set to create a data set to model on later on.
+Here, we'll get started by reading in Online News Popularity data and subsetting by news category (news channel). Additionally, URL and timedelta  (columns 1 and 2) are non-predictive variables. As such, we'll remove them from the main data set to create a data set to model with later on.
 ```{r, warning = FALSE, message = FALSE}
 #Reading in Online News Popularity Data set using relative path through directory
 sharesData <- read_csv("OnlineNewsPopularity.csv")
@@ -85,7 +89,9 @@ quant98 <- busData %>% summarise(q98 = quantile(shares, .98))
 sharesStats <- busData %>% summarise(Min = min(shares), Median = median(shares), Mean = mean(shares), q98 = quantile(shares, 0.98), Max = max(shares), "# Articles in Top 2%" = sum(busData$shares > quant98$q98, na.rm = TRUE), "# Total Articles" = length(shares))
 
 #Display stats
-sharesStats
+stats <- melt(sharesStats)
+colnames(stats) = c("Stat", "Value")
+kable(stats, caption = "Summary Stats")
 ```
 
 Now that we have some numerical summaries, we want to visualize what the majority of new article shares look like. To do this, we'll look at a basic histogram distribution of the 98th quantile of shares data to get a feel for what the distribution of the majority of shares data looks like. 

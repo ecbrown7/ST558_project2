@@ -42,6 +42,8 @@ These R packages are required.
 [ggsci](https://cran.r-project.org/web/packages/ggsci/vignettes/ggsci.html)  
 [corrplot](https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html)  
 [caret](https://cran.r-project.org/web/packages/caret/vignettes/caret.html)
+[knitr](https://rmarkdown.rstudio.com/lesson-7.html)
+[reshape2](https://cran.r-project.org/web/packages/reshape2/index.html)
 
 ``` r
 #Reading in required packages
@@ -51,6 +53,8 @@ library(gbm)
 library(ggsci)
 library(corrplot)
 library(caret)
+library(knitr)
+library(reshape2)
 ```
 
 # **Data**
@@ -58,7 +62,7 @@ library(caret)
 Here, we’ll get started by reading in Online News Popularity data and
 subsetting by news category (news channel). Additionally, URL and
 timedelta (columns 1 and 2) are non-predictive variables. As such, we’ll
-remove them from the main data set to create a data set to model on
+remove them from the main data set to create a data set to model with
 later on.
 
 ``` r
@@ -89,14 +93,22 @@ quant98 <- busData %>% summarise(q98 = quantile(shares, .98))
 sharesStats <- busData %>% summarise(Min = min(shares), Median = median(shares), Mean = mean(shares), q98 = quantile(shares, 0.98), Max = max(shares), "# Articles in Top 2%" = sum(busData$shares > quant98$q98, na.rm = TRUE), "# Total Articles" = length(shares))
 
 #Display stats
-sharesStats
+stats <- melt(sharesStats)
+colnames(stats) = c("Stat", "Value")
+kable(stats, caption = "Summary Stats")
 ```
 
-    ## # A tibble: 1 x 7
-    ##     Min Median  Mean   q98    Max `# Articles in Top 2%`
-    ##   <dbl>  <dbl> <dbl> <dbl>  <dbl>                  <int>
-    ## 1     1   1400 3063. 13900 690400                    125
-    ## # ... with 1 more variable: `# Total Articles` <int>
+| Stat                  |      Value |
+|:----------------------|-----------:|
+| Min                   |      1.000 |
+| Median                |   1400.000 |
+| Mean                  |   3063.019 |
+| q98                   |  13900.000 |
+| Max                   | 690400.000 |
+| \# Articles in Top 2% |    125.000 |
+| \# Total Articles     |   6258.000 |
+
+Summary Stats
 
 Now that we have some numerical summaries, we want to visualize what the
 majority of new article shares look like. To do this, we’ll look at a
@@ -117,7 +129,7 @@ sharesHist <- ggplot(busData, aes(x=shares)) +
 sharesHist
 ```
 
-![](README_files/figure-gfmunnamed-chunk-5-1.png)<!-- -->
+![](README_files/figure-gfmunnamed-chunk-16-1.png)<!-- -->
 
 Now that we’ve seen some numerical summaries and the general
 distribution of shares data, let’s look at the number of shares per news
@@ -182,7 +194,7 @@ DayPlot <- ggplot(DayData, aes(x = factor(Day, level = DayOrder), y = shares, fi
 DayPlot
 ```
 
-![](README_files/figure-gfmunnamed-chunk-6-1.png)<!-- -->
+![](README_files/figure-gfmunnamed-chunk-17-1.png)<!-- -->
 
 Now that we’ve evaluated differences in daily sharing, let’s take a look
 at sentiment polarity. Sentiment polarity for a news piece explains the
@@ -200,8 +212,8 @@ shares are coming from more positive pieces. A majority of shares around
 
 ``` r
 #Create sentiment polarity scatter plot
-polarityPlot <- ggplot(data = busData, aes(x = busData$global_sentiment_polarity, y = shares)) + 
-  geom_point(aes(colour = busData$global_sentiment_polarity), alpha = 0.4) +  #Set fill by polarity
+polarityPlot <- ggplot(data = busData, aes(x = global_sentiment_polarity, y = shares)) + 
+  geom_point(aes(colour = global_sentiment_polarity), alpha = 0.4) +  #Set fill by polarity
   theme_bw() +                                                       #Set classic bw plot theme   
   coord_cartesian(ylim = c(0, 50000), xlim = c(-1,1)) +              #Set axis limits
   xlab("Sentiment Polarity") + ylab("# Shares") +                    #Label axis
@@ -214,7 +226,7 @@ polarityPlot <- ggplot(data = busData, aes(x = busData$global_sentiment_polarity
 polarityPlot
 ```
 
-![](README_files/figure-gfmunnamed-chunk-7-1.png)<!-- -->
+![](README_files/figure-gfmunnamed-chunk-18-1.png)<!-- -->
 
 # **Modeling**
 
