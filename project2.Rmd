@@ -49,9 +49,9 @@ These R packages are required.
 [gbm](https://www.rdocumentation.org/packages/gbm/versions/2.1.8)  
 [ggsci](https://cran.r-project.org/web/packages/ggsci/vignettes/ggsci.html)  
 [corrplot](https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html)  
-[caret](https://cran.r-project.org/web/packages/caret/vignettes/caret.html)
-[knitr](https://rmarkdown.rstudio.com/lesson-7.html)
-[reshape2](https://cran.r-project.org/web/packages/reshape2/index.html)
+[caret](https://cran.r-project.org/web/packages/caret/vignettes/caret.html)  
+[knitr](https://rmarkdown.rstudio.com/lesson-7.html)  
+[reshape2](https://cran.r-project.org/web/packages/reshape2/index.html)  
 
 ```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
 #Reading in required packages
@@ -79,7 +79,7 @@ busData <- subset(sharesData, sharesData$data_channel_is_bus == 1)
 modelData <- busData[,-c(1,2)]
 ```
 
-After reading the data in and sub-setting by news category, the first thing we'll look at is some basic summary statistics of the data set for each category. These summaries will include a minimum, median (less sensitive to outliers), mean, max and 97th quantile. Since we care about predicting shares of future articles, some outliers may skew our what the majority of our data look like. As such, we'll look at the 98th quantile and take this as a representative number of the *majority* of the data. 
+After reading the data in and sub-setting by news category, the first thing we'll look at is some basic summary statistics of the data set for each category. These summaries will include a minimum, median (less sensitive to outliers), mean, max and 98th quantile. Since we care about predicting shares of future articles, some outliers may skew our what the majority of our data look like. As such, we'll look at the 98th quantile and take this as a representative number of the *majority* of the data. 
 
 ```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
 #Find 98th quantile
@@ -91,7 +91,7 @@ sharesStats <- busData %>% summarise(Min = min(shares), Median = median(shares),
 #Display stats
 stats <- melt(sharesStats)
 colnames(stats) = c("Stat", "Value")
-kable(stats, caption = "Summary Stats")
+kable(stats)
 ```
 
 Now that we have some numerical summaries, we want to visualize what the majority of new article shares look like. To do this, we'll look at a basic histogram distribution of the 98th quantile of shares data to get a feel for what the distribution of the majority of shares data looks like. 

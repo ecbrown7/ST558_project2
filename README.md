@@ -41,8 +41,8 @@ These R packages are required.
 [gbm](https://www.rdocumentation.org/packages/gbm/versions/2.1.8)  
 [ggsci](https://cran.r-project.org/web/packages/ggsci/vignettes/ggsci.html)  
 [corrplot](https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html)  
-[caret](https://cran.r-project.org/web/packages/caret/vignettes/caret.html)
-[knitr](https://rmarkdown.rstudio.com/lesson-7.html)
+[caret](https://cran.r-project.org/web/packages/caret/vignettes/caret.html)  
+[knitr](https://rmarkdown.rstudio.com/lesson-7.html)  
 [reshape2](https://cran.r-project.org/web/packages/reshape2/index.html)
 
 ``` r
@@ -79,7 +79,7 @@ modelData <- busData[,-c(1,2)]
 After reading the data in and sub-setting by news category, the first
 thing we’ll look at is some basic summary statistics of the data set for
 each category. These summaries will include a minimum, median (less
-sensitive to outliers), mean, max and 97th quantile. Since we care about
+sensitive to outliers), mean, max and 98th quantile. Since we care about
 predicting shares of future articles, some outliers may skew our what
 the majority of our data look like. As such, we’ll look at the 98th
 quantile and take this as a representative number of the *majority* of
@@ -95,7 +95,7 @@ sharesStats <- busData %>% summarise(Min = min(shares), Median = median(shares),
 #Display stats
 stats <- melt(sharesStats)
 colnames(stats) = c("Stat", "Value")
-kable(stats, caption = "Summary Stats")
+kable(stats)
 ```
 
 | Stat                  |      Value |
@@ -107,8 +107,6 @@ kable(stats, caption = "Summary Stats")
 | Max                   | 690400.000 |
 | \# Articles in Top 2% |    125.000 |
 | \# Total Articles     |   6258.000 |
-
-Summary Stats
 
 Now that we have some numerical summaries, we want to visualize what the
 majority of new article shares look like. To do this, we’ll look at a
@@ -129,7 +127,7 @@ sharesHist <- ggplot(busData, aes(x=shares)) +
 sharesHist
 ```
 
-![](README_files/figure-gfmunnamed-chunk-16-1.png)<!-- -->
+![](README_files/figure-gfmunnamed-chunk-5-1.png)<!-- -->
 
 Now that we’ve seen some numerical summaries and the general
 distribution of shares data, let’s look at the number of shares per news
@@ -194,7 +192,7 @@ DayPlot <- ggplot(DayData, aes(x = factor(Day, level = DayOrder), y = shares, fi
 DayPlot
 ```
 
-![](README_files/figure-gfmunnamed-chunk-17-1.png)<!-- -->
+![](README_files/figure-gfmunnamed-chunk-6-1.png)<!-- -->
 
 Now that we’ve evaluated differences in daily sharing, let’s take a look
 at sentiment polarity. Sentiment polarity for a news piece explains the
@@ -226,7 +224,7 @@ polarityPlot <- ggplot(data = busData, aes(x = global_sentiment_polarity, y = sh
 polarityPlot
 ```
 
-![](README_files/figure-gfmunnamed-chunk-18-1.png)<!-- -->
+![](README_files/figure-gfmunnamed-chunk-7-1.png)<!-- -->
 
 # **Modeling**
 
