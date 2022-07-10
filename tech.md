@@ -184,7 +184,7 @@ expandChannelData <- expandChannelData %>% unite(date, year, month, day, sep = "
 expandChannelData$date <- as.Date(expandChannelData$date)
 
 
-expandChannelData
+print(expandChannelData)
 ```
 
 ## Top 50 Posts
@@ -196,7 +196,7 @@ could parse the titles later for common words.
 ``` r
 top50 <- expandChannelData %>% select(shares,title,channel,date) %>% arrange(desc(shares)) %>% slice(1:50)
 
-top50
+print(top50)
 ```
 
 # Specific Channel Summary
@@ -306,8 +306,8 @@ correlation <- cor(correlation) # Create our values
 
 colnames(specificChannelData) <- OrigNames # Rename our columns back to normal
 
-corrplot(correlation, tl.pos = "lt", cl.cex = .8, tl.cex = .5, number.font = .7) # Plot
-corrplot
+Corr <- corrplot(correlation, tl.pos = "lt", cl.cex = .8, tl.cex = .5, number.font = .7) # Plot
+Corr
 ```
 
 ## Day Variable Summary
@@ -470,7 +470,7 @@ graphs may show higher sensitivity towards one or the other.
 
 ``` r
 globalRateNeg <-  ggplot(data = specificChannelData, aes(x = global_rate_negative_words, y = shares))
-globalRateNeg + geom_point(aes(colour = global_rate_negative_words), alpha = .04) +
+globalRateNegPlot <- globalRateNeg + geom_point(aes(colour = global_rate_negative_words), alpha = .04) +
   theme_bw() +
   coord_cartesian(ylim = c(0, 50000)) +
   xlab("Global Rate Negative Words") +
@@ -478,6 +478,7 @@ globalRateNeg + geom_point(aes(colour = global_rate_negative_words), alpha = .04
   ggtitle("Shares versus Negative Word Rate")+
     scale_color_gradientn("Negative Word Count",
                          colors = c("yellow","darkorange", "red"))
+globalRateNegPlot
 ```
 
 ![](README_files/figure-gfmunnamed-chunk-12-1.png)<!-- -->
@@ -496,7 +497,7 @@ behavior for posts in the top 75%, the IQR (25%-75%), and the bottom 25%
 g <- ggplot(specificChannelData, aes(x =title_sentiment_polarity, y = shares))
 
 
-g + geom_point(aes(colour = title_sentiment_polarity), alpha = .04) +
+titleSentimentality <- g + geom_point(aes(colour = title_sentiment_polarity), alpha = .04) +
   theme_bw() +
   xlab("Title Sentiment Polarity") +
   ylab("Shares")+
@@ -504,6 +505,7 @@ g + geom_point(aes(colour = title_sentiment_polarity), alpha = .04) +
   ggtitle("Shares versus Title Sentiment Polarity")+
     scale_color_gradientn("Title Sentiment Polarity",
                          colors = c("red","green", "blue"))
+titleSentimentality
 ```
 
 ![](README_files/figure-gfmunnamed-chunk-13-1.png)<!-- -->
@@ -517,7 +519,7 @@ their subjectivity value.
 
 ``` r
 g <- ggplot(specificChannelData, aes(x =title_subjectivity, y = shares))
-g + geom_point(aes(colour = title_subjectivity), alpha = .04) +
+titleSubjectivity <- g + geom_point(aes(colour = title_subjectivity), alpha = .04) +
   theme_bw() +
   xlab("Title Subjectivity") +
   ylab("Shares")+
@@ -525,6 +527,8 @@ g + geom_point(aes(colour = title_subjectivity), alpha = .04) +
   ggtitle("Shares versus Title Subjectivity")+
     scale_color_gradientn("Title Subjectivity",
                          colors = c("red","green", "blue"))
+
+titleSubjectivity
 ```
 
 ![](README_files/figure-gfmunnamed-chunk-14-1.png)<!-- -->
