@@ -12,165 +12,20 @@ params:
 
 ```{r global options, include = FALSE}
 knitr::opts_chunk$set(fig.path = "README_files/figure-gfm")
-```
-
-# Automation for Later, to be deleted. It is in the ReadME
-```{r, eval = FALSE}
-
-#"data_channel_is_lifestyle"     "data_channel_is_entertainment"
-#"data_channel_is_bus"           "data_channel_is_socmed"        
-#"data_channel_is_tech"          "data_channel_is_world"
-
-
-channel <- c("lifestyle", "entertainment", "bus", "socmed", "tech", "world")
-
-output_file = paste0(channel, ".md")
-
-params <-lapply(channel, FUN = function(x){list(channel=x)})
-
-reports <- tibble(output_file, params)
-
-apply (reports, margin =1, FUN= function(x) {
-  rmarkdown::render("files/project2.Rmd", output_file = x[[1]], output_format="github_document", params = x[[2]])
-  })
 
 ```
 
 
 
 # **Introduction**
-Stuff
 
+Our data for analysis was pulled from the following [source](https://archive.ics.uci.edu/ml/datasets/Online+News+Popularity) that was used in this paper "A Proactive Intelligent Decision Support System for Predicting the Popularity of Online News." Which can be downloaded [here](https://core.ac.uk/download/pdf/55638607.pdfaz)
 
+The paper was written in support of their Intelligent Decision Support System as a tool for publishers and writers to improve their articles to gain more shares and views. Their study found that a random forest model was the most useful with a discrimination power of 73%. In comparison, our final model was a linear model.
 
-These R packages are required.
+A list of variables and their meaning is found below. Pay attention to their numbers as it indicates their placement on a correlation plot later. The variable of interest will be #56.
 
-[tidyverse](https://www.tidyverse.org/packages/)  
-[randomForest](https://www.tutorialspoint.com/r/r_random_forest.htm)  
-[gbm](https://www.rdocumentation.org/packages/gbm/versions/2.1.8)  
-[ggsci](https://cran.r-project.org/web/packages/ggsci/vignettes/ggsci.html)  
-[corrplot](https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html)  
-[caret](https://cran.r-project.org/web/packages/caret/vignettes/caret.html)  
-[knitr](https://rmarkdown.rstudio.com/lesson-7.html)  
-[reshape2](https://cran.r-project.org/web/packages/reshape2/index.html)  
-
-```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
-#Reading in required packages
-library(tidyverse)
-library(randomForest)
-library(gbm)
-library(ggsci)
-library(corrplot)
-library(caret)
-library(knitr)
-library(reshape2)
-```
-
-## Overall Data
-
-The below section is an overall look at each data source in relation to each other. Some data transformation was involved so that we could have a new column to identify which news channel category it was from. Pivot_longer was considered, but some issues were ran into and this was another method to accomplish our goal.  
-
-We also added a title column so maybe we could get an idea of content inside the post. One aspect that is difficult to capture is something more specific than just a category. An example of what we are trying to recreate is similar to how youtube adds tags to the video and allows the author to add it. We also created a date column as well.
-```{r}
-
-#Subset full data by each channel
-Bus <- subset(sharesData, sharesData$data_channel_is_bus == 1)
-Life <- subset(sharesData, sharesData$data_channel_is_lifestyle == 1)
-Ent <- subset(sharesData, sharesData$data_channel_is_entertainment == 1)
-Socmed <- subset(sharesData, sharesData$data_channel_is_socmed == 1)
-Tech <- subset(sharesData, sharesData$data_channel_is_tech == 1)
-World <- subset(sharesData, sharesData$data_channel_is_world == 1)
-
-
-
-
-#Add Channel column
-Bus <- Bus %>% mutate(channel = "bus")
-Life <- Life %>% mutate(channel = "lifestyle")
-Ent <- Ent %>% mutate(channel = "entertainment")
-Socmed <- Socmed %>% mutate(channel = "socmed")
-Tech <- Tech %>% mutate(channel = "tech")
-World <- World %>% mutate(channel = "world")
-
-
-#Create data frame with channel col
-channelData <- rbind(Bus, Life, Ent, Socmed, Tech, World)
-
-channelData <- channelData %>% select(-starts_with("data_channel_is"))
-
-expandChannelData <- channelData %>% separate(url, c("http","site","com","year","month","day","title", sep="/", remove = FALSE))
-expandChannelData <- expandChannelData %>% unite(title, title, "/", "FALSE",sep="-")
-
-expandChannelData <- expandChannelData %>% select(-http,-site,-com)
-expandChannelData <- expandChannelData %>% unite(date, year, month, day, sep = "/")
-expandChannelData$date <- as.Date(expandChannelData$date)
-
-
-expandChannelData
-
-```
-Here we can see a list of the top 50 articles with their titles, regardless of channel to see if there are any trends in content. We could parse the titles later for common words.
-
-```{r}
-
-top50 <- expandChannelData %>% select(shares,title,channel,date) %>% arrange(desc(shares)) %>% slice(1:50)
-
-top50
-
-```
-
-
-
-## **Specific Channel Summary**
-
-Here, we'll get started by reading in the Online News Popularity data and sub-setting by news category (news channel). Additionally, URL and timedelta  (columns 1 and 2) are non-predictive variables thus we'll also remove them from the main data set to create a data set to model with later on.
-```{r, warning = FALSE, message = FALSE}
-#Reading in Online News Popularity Data set using relative path 
-sharesData <- read_csv("OnlineNewsPopularity.csv")
-
-params$channel
-specificChannelData
-#Subsetting for business news
-specificChannelData <- expandChannelData %>% filter(expandChannelData$channel == params$channel)
-#specificChannelData <- subset(sharesData, sharesData$data_channel_is_bus == 1)
-
-#Removing non-predictors to create data set to model from
-modelData <- specificChannelData[,-c(2,3,57)] # removing title, timedelta, channel, maybe we remove date, and leave in timedelta?
-```
-
-After reading the data in and sub-setting by news category, the first thing we'll look at is some basic summary statistics of the data set for each category. These summaries will include a minimum, median (less sensitive to outliers), mean, max and 98th quantile. Since what we care about is predicting shares of future articles, some outliers in this data set may skew what the majority of our data look like. As such, we'll find the 98th quantile and occasionally look at this as representative of the *majority* of the data. 
-
-```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
-#Find 98th quantile
-quant98 <- specificChannelData %>% summarise(q98 = quantile(shares, .98))
-
-#Create basic summary statistics (include quantile)
-sharesStats <- specificChannelData %>% summarise(Min = min(shares), Median = median(shares), Mean = mean(shares),q25 = quantile(shares, .25), q50 = quantile(shares, .50), q75 = quantile(shares, .75), q98 = quantile(shares, 0.98), Max = max(shares), "# Articles in Top 2%" = sum(specificChannelData$shares > quant98$q98, na.rm = TRUE), "# Total Articles" = length(shares))
-
-#Display stats in a nice table
-stats <- melt(sharesStats)
-colnames(stats) = c("Stat", "Value")
-kable(stats)
-```
-
-Now that we have some basic numerical summaries, we want to visualize what the majority of article shares looks like. To do this, we'll look at a  histogram distribution of the 98th quantile of shares data to get a feel for what the distribution of the majority of shares data looks like. 
-
-```{r, echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE}
-#Create histogram of shares 
-sharesHist <- ggplot(specificChannelData, aes(x=shares)) +  
-  theme_bw() +                                                                     #Set classic bw plot theme
-  geom_histogram(color="black", fill = "#34495E", alpha = 0.8, binwidth = 100) +   #Color options, binwidth set to 100 shares
-  labs(x = "Shares", y = "Count", title = "Shares Distribution", 
-       subtitle = "of 98th Quantile") +                                            #Set axis labels
-  coord_cartesian(xlim = c(0, sharesStats$q98))                                    #Set x axis limits
-
-#Display plot
-sharesHist
-```
-To wrap up our initial look at the data, let's take a look at the individual variables, what they mean, and any relationships. Remember we are focusing on shares as our goal. The variables we are working with are as follows:
-
-
-Attribute/Index Information:
+Description of Variables:
 
 1. Date
 2. Title
@@ -228,6 +83,141 @@ Attribute/Index Information:
 54. abs_title_subjectivity: Absolute subjectivity level
 55. abs_title_sentiment_polarity: Absolute polarity level
 56. shares: Number of shares (target)
+
+
+The models we built included the week variables (Linear Model 1), all variables (Linear Model 2), and the ones we found to have some very slight relationship with (Linear Model 3). We also performed two boosted models with all variables and again the same variables inside Linear Model 3, but was not as effective as our 2nd Linear Model.
+
+
+## Packages Used
+
+These R packages are required.
+
+[tidyverse](https://www.tidyverse.org/packages/)  
+[randomForest](https://www.tutorialspoint.com/r/r_random_forest.htm)  
+[gbm](https://www.rdocumentation.org/packages/gbm/versions/2.1.8)  
+[ggsci](https://cran.r-project.org/web/packages/ggsci/vignettes/ggsci.html)  
+[corrplot](https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html)  
+[caret](https://cran.r-project.org/web/packages/caret/vignettes/caret.html)  
+[knitr](https://rmarkdown.rstudio.com/lesson-7.html)  
+[reshape2](https://cran.r-project.org/web/packages/reshape2/index.html)  
+
+```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
+#Reading in required packages
+library(tidyverse)
+library(randomForest)
+library(gbm)
+library(ggsci)
+library(corrplot)
+library(caret)
+library(knitr)
+library(reshape2)
+```
+
+## Introduction to Overall Data
+
+The below section is an overall look at each data source in relation to each other. Some data transformation was involved so that we could have a new column to identify which news channel category it was from. Pivot_longer was considered, but some issues were ran into and this was another method to accomplish our goal.  
+
+We also added a title column so maybe we could get an idea of content inside the post. One aspect that is difficult to capture is something more specific than just a category. An example of what we are trying to recreate is similar to how youtube adds tags to the video and allows the author to add it. We also created a date column as well.
+```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
+
+#Subset full data by each channel
+Bus <- subset(sharesData, sharesData$data_channel_is_bus == 1)
+Life <- subset(sharesData, sharesData$data_channel_is_lifestyle == 1)
+Ent <- subset(sharesData, sharesData$data_channel_is_entertainment == 1)
+Socmed <- subset(sharesData, sharesData$data_channel_is_socmed == 1)
+Tech <- subset(sharesData, sharesData$data_channel_is_tech == 1)
+World <- subset(sharesData, sharesData$data_channel_is_world == 1)
+
+
+
+
+#Add Channel column
+Bus <- Bus %>% mutate(channel = "bus")
+Life <- Life %>% mutate(channel = "lifestyle")
+Ent <- Ent %>% mutate(channel = "entertainment")
+Socmed <- Socmed %>% mutate(channel = "socmed")
+Tech <- Tech %>% mutate(channel = "tech")
+World <- World %>% mutate(channel = "world")
+
+
+#Create data frame with channel col
+channelData <- rbind(Bus, Life, Ent, Socmed, Tech, World)
+
+channelData <- channelData %>% select(-starts_with("data_channel_is"))
+
+expandChannelData <- channelData %>% separate(url, c("http","site","com","year","month","day","title", sep="/", remove = FALSE))
+expandChannelData <- expandChannelData %>% unite(title, title, "/", "FALSE",sep="-")
+
+expandChannelData <- expandChannelData %>% select(-http,-site,-com)
+expandChannelData <- expandChannelData %>% unite(date, year, month, day, sep = "/")
+expandChannelData$date <- as.Date(expandChannelData$date)
+
+
+expandChannelData
+
+```
+Here we can see a list of the top 50 articles with their titles, regardless of channel to see if there are any trends in content. We could parse the titles later for common words.
+
+```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
+
+top50 <- expandChannelData %>% select(shares,title,channel,date) %>% arrange(desc(shares)) %>% slice(1:50)
+
+top50
+
+```
+
+
+
+## Specific Channel Summary
+
+Here, we'll get started by reading in the Online News Popularity data and sub-setting by news category (news channel). Additionally, URL and timedelta  (columns 1 and 2) are non-predictive variables thus we'll also remove them from the main data set to create a data set to model with later on.
+```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
+#Reading in Online News Popularity Data set using relative path 
+sharesData <- read_csv("OnlineNewsPopularity.csv")
+
+params$channel
+specificChannelData
+#Subsetting for business news
+specificChannelData <- expandChannelData %>% filter(expandChannelData$channel == params$channel)
+#specificChannelData <- subset(sharesData, sharesData$data_channel_is_bus == 1)
+
+#Removing non-predictors to create data set to model from
+modelData <- specificChannelData[,-c(2,3,57)] # removing title, timedelta, channel, maybe we remove date, and leave in timedelta?
+```
+
+After reading the data in and sub-setting by news category, the first thing we'll look at is some basic summary statistics of the data set for each category. These summaries will include a minimum, median (less sensitive to outliers), mean, max and 98th quantile. Since what we care about is predicting shares of future articles, some outliers in this data set may skew what the majority of our data look like. As such, we'll find the 98th quantile and occasionally look at this as representative of the *majority* of the data. 
+
+```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
+#Find 98th quantile
+quant98 <- specificChannelData %>% summarise(q98 = quantile(shares, .98))
+
+#Create basic summary statistics (include quantile)
+sharesStats <- specificChannelData %>% summarise(Min = min(shares), Median = median(shares), Mean = mean(shares),q25 = quantile(shares, .25), q50 = quantile(shares, .50), q75 = quantile(shares, .75), q98 = quantile(shares, 0.98), Max = max(shares), "# Articles in Top 2%" = sum(specificChannelData$shares > quant98$q98, na.rm = TRUE), "# Total Articles" = length(shares))
+
+#Display stats in a nice table
+stats <- melt(sharesStats)
+colnames(stats) = c("Stat", "Value")
+kable(stats)
+```
+
+Now that we have some basic numerical summaries, we want to visualize what the majority of article shares looks like. To do this, we'll look at a  histogram distribution of the 98th quantile of shares data to get a feel for what the distribution of the majority of shares data looks like. 
+
+```{r, echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE}
+#Create histogram of shares 
+sharesHist <- ggplot(specificChannelData, aes(x=shares)) +  
+  theme_bw() +                                                                     #Set classic bw plot theme
+  geom_histogram(color="black", fill = "#34495E", alpha = 0.8, binwidth = 100) +   #Color options, binwidth set to 100 shares
+  labs(x = "Shares", y = "Count", title = "Shares Distribution", 
+       subtitle = "of 98th Quantile") +                                            #Set axis labels
+  coord_cartesian(xlim = c(0, sharesStats$q98))                                    #Set x axis limits
+
+#Display plot
+sharesHist
+```
+To wrap up our initial look at the data, let's take a look at the individual variables, what they mean, and any relationships. Remember we are focusing on shares as our goal. The variables we are working with are as follows:
+
+
+
 
 
 Let's view a correlation plot to see if any variables in particular are related to each other. We will want to pay attention to column 56 to see if there are any strong relationships.
@@ -336,7 +326,7 @@ wordsPlot
 We've seen how sentiment from text inside the post can impact shares. Let's take a look at the rate of positive and negative words relate to shares. We would expect these to be similar to our sentiment graphs as positive/negative words are the building blocks to sentiment. This may give a clue as to how many positive or negative words can impact the reader's perception of the article.  
   
 From the below graphs we can see how many words in the content are positive and see how those posts relate to their shares. We can look to this graph to see if any specific amount of positive words in our content could lead to more shares. We can also interpret this as being a measure of a specific data channel's tolerance to positive words before deeming it too biased, poor writing, or another reason. We will want to pay attention to where shares are the highest.
-```{r}
+```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
 globalRatePos <-  ggplot(data = specificChannelData, aes(x = global_rate_positive_words, y = shares))
 globalRatePos + geom_point(aes(colour = global_rate_positive_words), alpha = .04) +
   theme_bw() +
@@ -350,7 +340,7 @@ globalRatePos + geom_point(aes(colour = global_rate_positive_words), alpha = .04
   
 We will also take a look at the negative word rate. Comparing the two graphs may show higher sensitivity towards one or the other.
 
-```{r}
+```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
 globalRateNeg <-  ggplot(data = specificChannelData, aes(x = global_rate_negative_words, y = shares))
 globalRateNeg + geom_point(aes(colour = global_rate_negative_words), alpha = .04) +
   theme_bw() +
@@ -363,7 +353,7 @@ globalRateNeg + geom_point(aes(colour = global_rate_negative_words), alpha = .04
 
 ```
 The next graph looks at title sentiment and whether it was perceived as negative or positive. The previous graph looked at the sentiment of the text, where as this will just be focused on the title. You can compare the graphs to see a difference that may be accounted for individuals sharing just based on titles rather than on the content inside. We've split the graphs into three segments to have a clearer look into the behavior for posts in the top 75%, the IQR (25%-75%), and the bottom 25%
-```{r}
+```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
 
 g <- ggplot(specificChannelData, aes(x =title_sentiment_polarity, y = shares))
 
@@ -384,7 +374,7 @@ g + geom_point(aes(colour = title_sentiment_polarity), alpha = .04) +
   
   We've seen how sentiment to titles affects shares, let's complete our analysis on titles by checking subjectivity. As with previous scatter plots, we will want to pay attention to the higher shared posts and their subjectivity value. 
 
-```{r}
+```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
 
 g <- ggplot(specificChannelData, aes(x =title_subjectivity, y = shares))
 g + geom_point(aes(colour = title_subjectivity), alpha = .04) +
@@ -399,7 +389,7 @@ g + geom_point(aes(colour = title_subjectivity), alpha = .04) +
 
 
 
-## **Modeling**
+## Modeling
 
 In this section, we will demonstrate fitting statistical models to our data in order to predict news article shares. We will fit 2 linear regression models (both Multiple Linear Regressions) and 2 ensemble models (Random Forest and Boosted Tree). Before we begin fitting models, it is imperative we split our data set into a "training" and a "testing" set. Fitting a model on your entire data set leaves you no data to test the models predictive capabilities on, and can over fit the model. In contrast, training the model on too little of your data set may under fit the model and result in a model that is bad at making predictions. In this analysis, we will use 70% of our data to train on and the other 30% will be used to test on. Let's go ahead and split the data now.
 
@@ -488,7 +478,7 @@ boostedFit2 <- train(shares ~ title_subjectivity+title_sentiment_polarity+global
 ```
 
 
-# **Comparison**
+# Comparison
 
 Now that we've fit our models, we need to compare them to select for the best one. We'll start by combining the results of each model fit on the training data set into a single data set. Then, we'll use these models to predict on the testing data set and combine those results into a final data set with both a testing and training selection criteria measurement (RMSE). The selection criteria we'll use to choose a winning model will be the Root Mean Squared Error (RMSE) of the testing predictions (since making predictions is what we care about most). RMSE captures the differences between values predicted by a model and values observed in the testing data set and as such, is a measure of how accurately the model predicts the response. The model with the lowest RMSE on the testing data set predictions will be considered the best model and the result will be populated below.
 
@@ -548,7 +538,7 @@ lowModelName <- paste0("The winning model is: ", rownames(lowModel))
 ```
 
 After evaluating the metrics, the winning model is...
-```{r, echo = FALSE, eval = TRUE}
+```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
 #Display winning model
 kable(lowModelName)
 ```

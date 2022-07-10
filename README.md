@@ -15,11 +15,6 @@ Evan Brown & Daniel Craig
 # Automation for Later, to be deleted. It is in the ReadME
 
 ``` r
-#"data_channel_is_lifestyle"     "data_channel_is_entertainment"
-#"data_channel_is_bus"           "data_channel_is_socmed"        
-#"data_channel_is_tech"          "data_channel_is_world"
-
-
 channel <- c("lifestyle", "entertainment", "bus", "socmed", "tech", "world")
 
 output_file = paste0(channel, ".md")
@@ -28,8 +23,8 @@ params <-lapply(channel, FUN = function(x){list(channel=x)})
 
 reports <- tibble(output_file, params)
 
-apply (reports, margin =1, FUN= function(x) {
-  rmarkdown::render("files/project2.Rmd", output_file = x[[1]], output_format="github_document", params = list[[2]])
+apply (reports, MARGIN =1, FUN= function(x) {
+  rmarkdown::render("project2.Rmd", output_file = x[[1]], output_format="github_document", params = x[[2]])
   })
 ```
 
