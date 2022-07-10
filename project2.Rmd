@@ -332,8 +332,28 @@ library(corrr)
 library(seriation)
 
 
+From these graphs we can see how many words in the content are positive and see how those posts relate to their shares. We can look to this graph to see if any specific amount of positive words in our content could lead to more shares. 
 ```{r}
-sharesStats <- expandChannelData %>% summarise(Min = min(shares), Median = median(shares), Mean = mean(shares), q98 = quantile(shares, 0.98), Max = max(shares), "# Articles in Top 2%" = sum(busData$shares > quant98$q98, na.rm = TRUE), "# Total Articles" = length(shares))
+globalRatePos <- ggplot(data = busData, aes(x = global_rate_positive_words, y = shares))
+globalRatePos + geom_point()
+```
+
+As we've looked at the positive words, let's see how negative words relate.
+```{r}
+globalRateNeg <-  ggplot(data = busData, aes(x = global_rate_negative_words, y = shares))
+globalRateNeg + geom_point()
+
+# Evans code for reference 
+  #geom_point(aes(colour = n_tokens_content), alpha = 0.4) +          #Set fill by number of words
+ # theme_bw() +                                                       #Set classic bw plot theme   
+ # coord_cartesian(ylim = c(0, 50000)) +                              #Set axis limits
+ # xlab("Word Count") + ylab("# Shares") +                            #Label axis
+ # ggtitle("Shares versus Word Count") +                              #Set title
+ # scale_colour_gradientn("Word Count",                               #Set legend title
+                     #    colors = c("#9ABBF6","#6E0FAD", "#BF0A1A")) #Set colors for x-axis gradient
+
+#Display plot
+wordsPlot
 ```
 
 
@@ -373,23 +393,63 @@ expandChannelData <- expandChannelData %>% unite(date, year, month, day, sep = "
 expandChannelData$date <- as.Date(expandChannelData$date)
 
 
-outliers <- expandChannelData %>% filter(shares > 200000) %>% select(shares, channel, title)
-outliers
+
+
+```
+The next graph looks at title sentiment and whether it was perceived as negative or positive. The previous graph looked at the sentiment of the text, where as this will just be focused on the title. You can compare the graphs to see a difference that may be accounted for individuals sharing just based on titles rather than on the content inside. We've split both for shares higher than 200,000 and 
+```{r}
+quantile(busData, )
+
+q75 = quantile(busData$shares, .75)
+q25 = quantile(busData$shares, .25)
+outliers <- expandChannelData %>% filter(shares > q75)
+normals  <- expandChannelData %>% filter(between(shares, q25, q75))
+lows <- expandChannelData %>% filter(shares < q25)
+
+g <- ggplot(outliers, aes(x =title_sentiment_polarity, y = shares))
+
+g + geom_point()
+
+
+g2 <- ggplot(normals, aes(x = title_sentiment_polarity, y = shares))
+g2 + geom_point()+geom_jitter()
+
+g3 <-ggplot(lows, aes(x = title_sentiment_polarity, y = shares))
+g3 +geom_point()+geom_jitter()
+g3
 
 ```
 
+We've seen how sentiment to titles affects shares, let's complete our analysis on titles by checking subjectivity. In each of our ranges.
+```{r}
+q75 = quantile(busData$shares, .75)
+q25 = quantile(busData$shares, .25)
+outliers <- expandChannelData %>% filter(shares > q75)
+normals  <- expandChannelData %>% filter(between(shares, q25, q75))
+lows <- expandChannelData %>% filter(shares < q25)
+
+g <- ggplot(outliers, aes(x =title_subjectivity, y = shares))
+g + geom_point()
+
+g2 <- ggplot(normals, aes(x = title_subjectivity, y = shares))
+g2 + geom_point()+geom_jitter()
+
+g3 <-ggplot(lows, aes(x = title_subjectivity, y = shares))
+g3 +geom_point()+geom_jitter()
+g3
 
 
+titleSubHist <- ggplot(expandChannelData, aes(x=title_subjectivity)) +  
+  theme_bw() +                                                                     #Set classic bw plot theme
+  geom_histogram(color="black", fill = "#34495E", alpha = 0.8, binwidth = 100) +   #Color options, binwidth set to 100 shares
+  labs(x = "Shares", y = "Count", title = "Shares Distribution", 
+       subtitle = "of 98th Quantile") +                                            #Set axis labels
+  coord_cartesian(xlim = c(0, sharesStats$q98))                                    #Set x axis limits
 
+#Display plot
+titleSubHist
 
-
-
-
-
-
-
-
-
+```
 
 
 
