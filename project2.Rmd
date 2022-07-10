@@ -16,8 +16,7 @@ knitr::opts_chunk$set(fig.path = "README_files/figure-gfm")
 ```
 
 
-
-# **Introduction**
+# Introduction
 
 Our data for analysis was pulled from the following [source](https://archive.ics.uci.edu/ml/datasets/Online+News+Popularity) that was used in this paper "A Proactive Intelligent Decision Support System for Predicting the Popularity of Online News." Which can be downloaded [here](https://core.ac.uk/download/pdf/55638607.pdfaz)
 
@@ -85,7 +84,7 @@ Description of Variables:
 56. shares: Number of shares (target)
 
 
-The models we built included the week variables (Linear Model 1), all variables (Linear Model 2), and the ones we found to have some very slight relationship with (Linear Model 3). We also performed two boosted models with all variables and again the same variables inside Linear Model 3, but was not as effective as our 2nd Linear Model.
+The models we built included the week variables (Linear Model 1), all variables (Linear Model 2), and the ones we found to have some very slight relationship with (Linear Model 3) per the correlation plot. We also performed two boosted models with all variables and again the same variables inside Linear Model 3, but was not as effective as our Linear Models.
 
 
 ## Packages Used
@@ -113,7 +112,7 @@ library(knitr)
 library(reshape2)
 ```
 
-## Introduction to Overall Data
+# Introduction to Overall Data
 
 The below section is an overall look at each data source in relation to each other. Some data transformation was involved so that we could have a new column to identify which news channel category it was from. Pivot_longer was considered, but some issues were ran into and this was another method to accomplish our goal.  
 
@@ -156,6 +155,8 @@ expandChannelData$date <- as.Date(expandChannelData$date)
 expandChannelData
 
 ```
+## Top 50 Posts
+
 Here we can see a list of the top 50 articles with their titles, regardless of channel to see if there are any trends in content. We could parse the titles later for common words.
 
 ```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
@@ -168,7 +169,7 @@ top50
 
 
 
-## Specific Channel Summary
+# Specific Channel Summary
 
 Here, we'll get started by reading in the Online News Popularity data and sub-setting by news category (news channel). Additionally, URL and timedelta  (columns 1 and 2) are non-predictive variables thus we'll also remove them from the main data set to create a data set to model with later on.
 ```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
@@ -184,6 +185,7 @@ specificChannelData <- expandChannelData %>% filter(expandChannelData$channel ==
 #Removing non-predictors to create data set to model from
 modelData <- specificChannelData[,-c(2,3,57)] # removing title, timedelta, channel, maybe we remove date, and leave in timedelta?
 ```
+## Summary Stats
 
 After reading the data in and sub-setting by news category, the first thing we'll look at is some basic summary statistics of the data set for each category. These summaries will include a minimum, median (less sensitive to outliers), mean, max and 98th quantile. Since what we care about is predicting shares of future articles, some outliers in this data set may skew what the majority of our data look like. As such, we'll find the 98th quantile and occasionally look at this as representative of the *majority* of the data. 
 
@@ -199,7 +201,7 @@ stats <- melt(sharesStats)
 colnames(stats) = c("Stat", "Value")
 kable(stats)
 ```
-
+## Histogram Summary
 Now that we have some basic numerical summaries, we want to visualize what the majority of article shares looks like. To do this, we'll look at a  histogram distribution of the 98th quantile of shares data to get a feel for what the distribution of the majority of shares data looks like. 
 
 ```{r, echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE}
@@ -216,9 +218,7 @@ sharesHist
 ```
 To wrap up our initial look at the data, let's take a look at the individual variables, what they mean, and any relationships. Remember we are focusing on shares as our goal. The variables we are working with are as follows:
 
-
-
-
+## Correlation  
 
 Let's view a correlation plot to see if any variables in particular are related to each other. We will want to pay attention to column 56 to see if there are any strong relationships.
 
@@ -234,11 +234,13 @@ correlation <- cor(correlation) # Create our values
 
 colnames(specificChannelData) <- OrigNames # Rename our columns back to normal
 
-correlation
 corrplot(correlation, tl.pos = "lt", cl.cex = .8, tl.cex = .5, number.font = .7) # Plot
+corrplot
 
 
 ```
+
+## Day Variable Summary
 Now that we've seen some numerical summaries and the general distribution of shares data, let's look at the number of shares per news piece for each day of the week. To do this, we'll subset the data by the mapping 'weekday =' variable and bind each daily subset back together to create a column corresponding to day of the week. From there, we'll create a box plot of number of shares across each day of the week for that news category. We'll then add a line corresponding to the **total median** number of shares. Finally, in order to visualize the box plots appropriately, the y axis has been scaled to show just the 98th quantile of the data, but the values inside the box plots are still representative of the data in it's entirety.
 
 As a result of constructing daily box plots, we can inspect the 5-number summary (min, q1, median, q3, max) for the number of shares for each day of the week and compare this to the overall median number of shares (black horizontal line). If a daily median is higher than the total median, then articles tend to get shared more on that day. If a daily median is lower than the total median, then articles tend to get shared less. 
@@ -285,6 +287,9 @@ DayPlot <- ggplot(DayData, aes(x = factor(Day, level = DayOrder), y = shares, fi
 DayPlot
 ```
 
+
+## Sentiment Polarity Summary  
+  
 Now that we've evaluated differences in daily sharing, let's take a look at sentiment polarity. Sentiment polarity for a news piece explains the orientation of the expressed sentiment(i.e. It determines if the piece expresses a negative, neutral, or positive overall sentiment from the readers point of view). The value we will be looking at is specific to the text in the article. We will look at title sentiment later.  
   
 Values for sentiment polarity range from -1 to 1, with -1 being very negative, 0 being neutral, and 1 being very positive. The plot below has a color scaled x-axis that will populate shares data points as red if it's negative, yellow if it's neutral, and green if it's positive.  
@@ -323,6 +328,7 @@ wordsPlot <- ggplot(data = specificChannelData, aes(x = n_tokens_content, y = sh
 wordsPlot
 ```
 
+## Positive/Negative Words Summary
 We've seen how sentiment from text inside the post can impact shares. Let's take a look at the rate of positive and negative words relate to shares. We would expect these to be similar to our sentiment graphs as positive/negative words are the building blocks to sentiment. This may give a clue as to how many positive or negative words can impact the reader's perception of the article.  
   
 From the below graphs we can see how many words in the content are positive and see how those posts relate to their shares. We can look to this graph to see if any specific amount of positive words in our content could lead to more shares. We can also interpret this as being a measure of a specific data channel's tolerance to positive words before deeming it too biased, poor writing, or another reason. We will want to pay attention to where shares are the highest.
@@ -352,6 +358,9 @@ globalRateNeg + geom_point(aes(colour = global_rate_negative_words), alpha = .04
                          colors = c("yellow","darkorange", "red"))
 
 ```
+
+## Title Sentimentality Summary  
+  
 The next graph looks at title sentiment and whether it was perceived as negative or positive. The previous graph looked at the sentiment of the text, where as this will just be focused on the title. You can compare the graphs to see a difference that may be accounted for individuals sharing just based on titles rather than on the content inside. We've split the graphs into three segments to have a clearer look into the behavior for posts in the top 75%, the IQR (25%-75%), and the bottom 25%
 ```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
 
@@ -371,7 +380,9 @@ g + geom_point(aes(colour = title_sentiment_polarity), alpha = .04) +
   
   
 
+## Title Subjectivity Summary  
   
+
   We've seen how sentiment to titles affects shares, let's complete our analysis on titles by checking subjectivity. As with previous scatter plots, we will want to pay attention to the higher shared posts and their subjectivity value. 
 
 ```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
@@ -389,7 +400,7 @@ g + geom_point(aes(colour = title_subjectivity), alpha = .04) +
 
 
 
-## Modeling
+# Modeling
 
 In this section, we will demonstrate fitting statistical models to our data in order to predict news article shares. We will fit 2 linear regression models (both Multiple Linear Regressions) and 2 ensemble models (Random Forest and Boosted Tree). Before we begin fitting models, it is imperative we split our data set into a "training" and a "testing" set. Fitting a model on your entire data set leaves you no data to test the models predictive capabilities on, and can over fit the model. In contrast, training the model on too little of your data set may under fit the model and result in a model that is bad at making predictions. In this analysis, we will use 70% of our data to train on and the other 30% will be used to test on. Let's go ahead and split the data now.
 
@@ -444,11 +455,11 @@ linearModel3 <- train(shares ~ title_subjectivity+title_sentiment_polarity+globa
 ```
 
 
-### Ensemble Models
+## Ensemble Models
 
 Ensemble models are an approach that combines many models in the prediction process. Two common example are Random Forests and Boosting Trees. Random Forests use a decision (classification) tree for each predictor in a random subset of predictors. Individually, each tree breaks one predictor variable into multiple "nodes". The number of nodes will vary, but each node is fit to the data to minimize the residual sum of squares (distance of each data point within the node range from the node average). In this work, we have 59 predictors and as a rule of thumb, Random Forests for regression prediction use a third of predictors in their random subset. So for this data, our model will cycle over random subsets of 20 variables; each split into their own tree with many nodes. Working as an ensemble method, each individual tree will be summed up to create a total model, then the best random subset of predictors model will be chosen as the optimal model by Random Forest modeling. 
 
-Boosting Trees _______.
+Boosting Trees are an approach that grows trees sequentially and slowly. A model is fit and then the data is slightly changed by an iterating parameter for the model to then re-train. Predictions are updated as the tree grows. Predictions are initialized at 0, residuals are found, a tree is fit with 'd' number of splits where the residuals are the response variable, we call our predictions, update them, and repeat a number of times. Cross validation can be used to identify the different variable counts. Included in the model growth, is a parameter lambda, that slows the process and makes sure changes are very small.
 
 Now, let's fit these models.
 
