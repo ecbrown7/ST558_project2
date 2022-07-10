@@ -222,7 +222,7 @@ To wrap up our initial look at the data, let's take a look at the individual var
 
 Let's view a correlation plot to see if any variables in particular are related to each other. We will want to pay attention to column 56 to see if there are any strong relationships.
 
-```{r echo = TRUE, eval = FALSE, message = FALSE, warning = FALSE}
+```{r echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE}
 
 OrigNames <- colnames(specificChannelData) # Saving names since we will overwrite them
 
@@ -234,8 +234,7 @@ correlation <- cor(correlation) # Create our values
 
 colnames(specificChannelData) <- OrigNames # Rename our columns back to normal
 
-Corr <- corrplot(correlation, tl.pos = "lt", cl.cex = .8, tl.cex = .5, number.font = .7) # Plot
-Corr
+corrplot(correlation, tl.pos = "lt", cl.cex = .8, tl.cex = .5, number.font = .7) # Plot
 
 
 ```

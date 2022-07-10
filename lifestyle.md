@@ -284,7 +284,7 @@ sharesHist <- ggplot(specificChannelData, aes(x=shares)) +
 sharesHist
 ```
 
-![](README_files/figure-gfmunnamed-chunk-34-1.png)<!-- --> To wrap up
+![](README_files/figure-gfmunnamed-chunk-11-1.png)<!-- --> To wrap up
 our initial look at the data, let’s take a look at the individual
 variables, what they mean, and any relationships. Remember we are
 focusing on shares as our goal. The variables we are working with are as
@@ -307,9 +307,10 @@ correlation <- cor(correlation) # Create our values
 
 colnames(specificChannelData) <- OrigNames # Rename our columns back to normal
 
-Corr <- corrplot(correlation, tl.pos = "lt", cl.cex = .8, tl.cex = .5, number.font = .7) # Plot
-Corr
+corrplot(correlation, tl.pos = "lt", cl.cex = .8, tl.cex = .5, number.font = .7) # Plot
 ```
+
+![](README_files/figure-gfmunnamed-chunk-12-1.png)<!-- -->
 
 ## Day Variable Summary
 
@@ -375,7 +376,7 @@ DayPlot <- ggplot(DayData, aes(x = factor(Day, level = DayOrder), y = shares, fi
 DayPlot
 ```
 
-![](README_files/figure-gfmunnamed-chunk-36-1.png)<!-- -->
+![](README_files/figure-gfmunnamed-chunk-13-1.png)<!-- -->
 
 ## Sentiment Polarity Summary
 
@@ -413,7 +414,7 @@ polarityPlot <- ggplot(data = specificChannelData, aes(x = global_sentiment_pola
 polarityPlot
 ```
 
-![](README_files/figure-gfmunnamed-chunk-37-1.png)<!-- -->
+![](README_files/figure-gfmunnamed-chunk-14-1.png)<!-- -->
 
 To wrap up our text analysis, let’s take a look at how the relation of
 shares to the number of words per content piece.
@@ -433,7 +434,7 @@ wordsPlot <- ggplot(data = specificChannelData, aes(x = n_tokens_content, y = sh
 wordsPlot
 ```
 
-![](README_files/figure-gfmunnamed-chunk-38-1.png)<!-- -->
+![](README_files/figure-gfmunnamed-chunk-15-1.png)<!-- -->
 
 ## Positive/Negative Words Summary
 
@@ -464,7 +465,7 @@ globalRatePos + geom_point(aes(colour = global_rate_positive_words), alpha = .04
                          colors = c("yellow","green", "blue"))
 ```
 
-![](README_files/figure-gfmunnamed-chunk-39-1.png)<!-- -->
+![](README_files/figure-gfmunnamed-chunk-16-1.png)<!-- -->
 
 We will also take a look at the negative word rate. Comparing the two
 graphs may show higher sensitivity towards one or the other.
@@ -482,7 +483,7 @@ globalRateNegPlot <- globalRateNeg + geom_point(aes(colour = global_rate_negativ
 globalRateNegPlot
 ```
 
-![](README_files/figure-gfmunnamed-chunk-40-1.png)<!-- -->
+![](README_files/figure-gfmunnamed-chunk-17-1.png)<!-- -->
 
 ## Title Sentimentality Summary
 
@@ -509,7 +510,7 @@ titleSentimentality <- g + geom_point(aes(colour = title_sentiment_polarity), al
 titleSentimentality
 ```
 
-![](README_files/figure-gfmunnamed-chunk-41-1.png)<!-- -->
+![](README_files/figure-gfmunnamed-chunk-18-1.png)<!-- -->
 
 ## Title Subjectivity Summary
 
@@ -532,7 +533,7 @@ titleSubjectivity <- g + geom_point(aes(colour = title_subjectivity), alpha = .0
 titleSubjectivity
 ```
 
-![](README_files/figure-gfmunnamed-chunk-42-1.png)<!-- -->
+![](README_files/figure-gfmunnamed-chunk-19-1.png)<!-- -->
 
 # Modeling
 
