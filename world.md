@@ -306,9 +306,10 @@ correlation <- cor(correlation) # Create our values
 
 colnames(specificChannelData) <- OrigNames # Rename our columns back to normal
 
-Corr <- corrplot(correlation, tl.pos = "lt", cl.cex = .8, tl.cex = .5, number.font = .7) # Plot
-Corr
+corrplot(correlation, tl.pos = "lt", cl.cex = .8, tl.cex = .5, number.font = .7) # Plot
 ```
+
+![](README_files/figure-gfmunnamed-chunk-7-1.png)<!-- -->
 
 ## Day Variable Summary
 
