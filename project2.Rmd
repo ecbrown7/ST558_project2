@@ -325,7 +325,58 @@ kable(lowModelName)
 Awesome. Now that we have our winning model, we can use this to predict shares of future news articles. This will be very useful going forward!
 
 
+For comparison between channels and basic understanding of the data across channels, we'll do some quick some data transformation.
 
+
+library(corrr)
+library(seriation)
+
+
+```{r}
+sharesStats <- expandChannelData %>% summarise(Min = min(shares), Median = median(shares), Mean = mean(shares), q98 = quantile(shares, 0.98), Max = max(shares), "# Articles in Top 2%" = sum(busData$shares > quant98$q98, na.rm = TRUE), "# Total Articles" = length(shares))
+```
+
+
+
+
+```{r}
+
+#Subset full data by each channel
+Bus <- subset(sharesData, sharesData$data_channel_is_bus == 1)
+Life <- subset(sharesData, sharesData$data_channel_is_lifestyle == 1)
+Ent <- subset(sharesData, sharesData$data_channel_is_entertainment == 1)
+Socmed <- subset(sharesData, sharesData$data_channel_is_socmed == 1)
+Tech <- subset(sharesData, sharesData$data_channel_is_tech == 1)
+World <- subset(sharesData, sharesData$data_channel_is_world == 1)
+
+#Add Channel column
+Bus <- Bus %>% mutate(channel = "Bus")
+Life <- Life %>% mutate(channel = "Life")
+Ent <- Ent %>% mutate(channel = "Ent")
+Socmed <- Socmed %>% mutate(channel = "Socmed")
+Tech <- Tech %>% mutate(channel = "Tech")
+World <- World %>% mutate(channel = "World")
+
+
+#Create data frame with channel col
+channelData <- rbind(Bus, Life, Ent, Socmed, Tech, World)
+
+channelData <- channelData %>% select(-starts_with("data_channel_is"))
+
+
+
+expandChannelData <- channelData %>% separate(url, c("http","site","com","year","month","day","title", sep="/", remove = FALSE))
+expandChannelData <- expandChannelData %>% unite(title, title, "/", "FALSE",sep="-")
+
+expandChannelData <- expandChannelData %>% select(-http,-site,-com)
+expandChannelData <- expandChannelData %>% unite(date, year, month, day, sep = "/")
+expandChannelData$date <- as.Date(expandChannelData$date)
+
+
+outliers <- expandChannelData %>% filter(shares > 200000) %>% select(shares, channel, title)
+outliers
+
+```
 
 
 
